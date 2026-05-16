@@ -1,29 +1,22 @@
 'use server'
 
-import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { db } from '@/db'
 import { profiles } from '@/db/schema'
 
-const authSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters')
-})
-
 export async function login(prevState: any, formData: FormData) {
   const email = formData.get('email') as string
   const password = formData.get('password') as string
-  const result = authSchema.safeParse({ email, password })
 
-  if (!result.success) {
-    return { error: result.error.errors[0].message }
-  }
+  // Native Validation (100% TypeScript safe)
+  if (!email || !email.includes('@')) return { error: 'Invalid email address' }
+  if (!password || password.length < 6) return { error: 'Password must be at least 6 characters' }
 
   const supabase = await createClient()
   const { error } = await supabase.auth.signInWithPassword({
-    email: result.data.email,
-    password: result.data.password,
+    email,
+    password,
   })
 
   if (error) return { error: error.message }
@@ -33,16 +26,15 @@ export async function login(prevState: any, formData: FormData) {
 export async function signup(prevState: any, formData: FormData) {
   const email = formData.get('email') as string
   const password = formData.get('password') as string
-  const result = authSchema.safeParse({ email, password })
 
-  if (!result.success) {
-    return { error: result.error.errors[0].message }
-  }
+  // Native Validation (100% TypeScript safe)
+  if (!email || !email.includes('@')) return { error: 'Invalid email address' }
+  if (!password || password.length < 6) return { error: 'Password must be at least 6 characters' }
 
   const supabase = await createClient()
   const { data, error } = await supabase.auth.signUp({
-    email: result.data.email,
-    password: result.data.password,
+    email,
+    password,
   })
 
   if (error) return { error: error.message }
